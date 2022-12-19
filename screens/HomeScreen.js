@@ -5,15 +5,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomListItem from "../components/CustomListItem";
 import { Avatar } from "@rneui/base";
 import { auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
 import { AntDesign, SimpleLineIcons } from "@expo/vector-icons";
+import { collection, getDocs } from "firebase/firestore";
 
 const HomeScreen = ({ navigation }) => {
+  const [chats, setChats] = useState([]);
+
   const signOutUser = () => {
     signOut(auth)
       .then(() => {
@@ -24,6 +27,20 @@ const HomeScreen = ({ navigation }) => {
         // An error happened.
       });
   };
+
+  useEffect(() => {
+    const getData = async () => {
+      const data = await getDocs(collection(db, "chats"));
+      setChats(
+        data.docs.map((doc) => ({
+          id: doc.id,
+          data: doc.data(),
+        }))
+      );
+    };
+
+    getData();
+  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -70,7 +87,9 @@ const HomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView>
       <ScrollView>
-        <CustomListItem />
+        {chats.map(({ id, data: { chatName } }) => (
+          <CustomListItem key={id} id={id} chatName={chatName} />
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
