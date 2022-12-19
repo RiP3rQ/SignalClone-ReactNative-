@@ -4,7 +4,7 @@ import { Avatar, ListItem } from "@rneui/base";
 
 const CustomListItem = ({ id, chatName, enterChat }) => {
   return (
-    <ListItem>
+    <ListItem onPress={() => enterChat(id, chatName)} key={id} bottomDivider>
       <Avatar
         rounded
         source={{
@@ -13,12 +13,11 @@ const CustomListItem = ({ id, chatName, enterChat }) => {
       />
       <ListItem.Content>
         <ListItem.Title style={{ fontWeight: "800" }}>
-          YouTube Chat
+          {chatName}
         </ListItem.Title>
 
         <ListItem.Subtitle numberOfLines={1} ellipsizeMode="tail">
-          This is a test subtitle! This is a test subtitle! This is a test
-          subtitle! This is a test subtitle! This is a test subtitle!
+          ABC
         </ListItem.Subtitle>
       </ListItem.Content>
     </ListItem>
