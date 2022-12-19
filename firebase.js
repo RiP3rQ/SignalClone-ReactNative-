@@ -15,7 +15,7 @@ getApps().length === 0
   ? (app = initializeApp(firebaseConfig))
   : (app = getApp());
 
-const db = getFirestore(app);
-const auth = getAuth(app);
+const db = getFirestore();
+const auth = getAuth();
 
 export { db, auth };

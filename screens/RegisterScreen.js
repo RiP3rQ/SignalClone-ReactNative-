@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { Button, Input } from "@rneui/base";
 import { Text } from "@rneui/themed";
 import { auth } from "../firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -17,18 +17,20 @@ const RegisterScreen = ({ navigation }) => {
       .then((userCredential) => {
         // Signed in
         const user = userCredential.user;
-        user.updateProfile({
+        // ...
+        updateProfile(user, {
           displayName: name,
           photoURL:
             imageUrl ||
             "https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png",
-        });
+        })
+          .then(() => {
+            // Profile updated!
+            // ...
+          })
+          .catch((error) => alert(error));
       })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // ..
-      });
+      .catch((error) => alert(error.message));
   };
 
   return (
