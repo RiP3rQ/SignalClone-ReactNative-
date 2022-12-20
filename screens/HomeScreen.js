@@ -40,7 +40,7 @@ const HomeScreen = ({ navigation }) => {
     };
 
     getData();
-  }, [chats]);
+  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({

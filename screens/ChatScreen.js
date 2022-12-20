@@ -14,11 +14,18 @@ import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Keyboard } from "react-native";
-import { serverTimestamp, addDoc, collection } from "firebase/firestore";
+import {
+  serverTimestamp,
+  addDoc,
+  collection,
+  getDocs,
+  orderBy,
+} from "firebase/firestore";
 import { db, auth } from "../firebase";
 
 const ChatScreen = ({ navigation, route }) => {
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -34,7 +41,9 @@ const ChatScreen = ({ navigation, route }) => {
           <Avatar
             rounded
             source={{
-              uri: "https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png",
+              uri:
+                messages[0]?.data.photoURL ||
+                "https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png",
             }}
           />
           <Text
@@ -66,7 +75,7 @@ const ChatScreen = ({ navigation, route }) => {
         </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, messages]);
 
   const sendMessage = () => {
     Keyboard.dismiss();
@@ -85,6 +94,23 @@ const ChatScreen = ({ navigation, route }) => {
     setInput("");
   };
 
+  useLayoutEffect(() => {
+    const q = query(
+      collection(db, "chats", route.params.id, "messages"),
+      orderBy("timestamp", "desc")
+    );
+    const querySnapshot = getDocs(q);
+    querySnapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+      setMessages(
+        data.docs.map((doc) => ({
+          id: doc.id,
+          data: doc.data(),
+        }))
+      );
+    });
+  }, [route]);
+
   return (
     <SafeAreaView
       style={{
@@ -100,7 +126,52 @@ const ChatScreen = ({ navigation, route }) => {
         {/* HIDE KEYBOARD ON PRESS OUTSIDE KEYBOARD AREA */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <>
-            <ScrollView>{/* CHAT ELEMENTS HERE */}</ScrollView>
+            <ScrollView contentContainerStyle={{ paddingTop: 15 }}>
+              {messages.map(({ id, data }) =>
+                data.email === auth.currentUser.email ? (
+                  <View key={id} style={styles.reciever}>
+                    <Avatar
+                      position="absolute"
+                      bottom={-15}
+                      right={-5}
+                      //WEB
+                      containerStyle={{
+                        position: "absolute",
+                        bottom: -15,
+                        right: -5,
+                      }}
+                      rounded
+                      size={30}
+                      source={{
+                        uri: data.photoUrl,
+                      }}
+                    />
+                    <Text style={styles.recieverText}>{data.message}</Text>
+                  </View>
+                ) : (
+                  <View key={id} style={styles.sender}>
+                    <Avatar
+                      position="absolute"
+                      bottom={-15}
+                      right={-5}
+                      //WEB
+                      containerStyle={{
+                        position: "absolute",
+                        bottom: -15,
+                        right: -5,
+                      }}
+                      rounded
+                      size={30}
+                      source={{
+                        uri: data.photoUrl,
+                      }}
+                    />
+                    <Text style={styles.senderText}>{data.message}</Text>
+                    <Text style={styles.senderName}>{data.displayName}</Text>
+                  </View>
+                )
+              )}
+            </ScrollView>
             <View style={styles.footer}>
               <TextInput
                 placeholder="Signal Message"
@@ -142,5 +213,30 @@ const styles = StyleSheet.create({
     padding: 10,
     color: "grey",
     borderRadius: 30,
+  },
+  reciever: {
+    padding: 15,
+    backgroundColor: "#ECECEC",
+    alignSelf: "flex-end",
+    borderRadius: 20,
+    marginRight: 15,
+    marginBottom: 20,
+    maxWidth: "80%",
+    position: "relative",
+  },
+  sender: {
+    padding: 15,
+    backgroundColor: "#2B68E6",
+    alignSelf: "flex-start",
+    borderRadius: 20,
+    margin: 15,
+    maxWidth: "80%",
+    position: "relative",
+  },
+  senderName: {
+    left: 10,
+    paddingRight: 10,
+    fontSize: 10,
+    color: "white",
   },
 });
