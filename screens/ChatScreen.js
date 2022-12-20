@@ -5,6 +5,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import React, { useLayoutEffect, useState } from "react";
@@ -12,11 +13,12 @@ import { Avatar } from "@rneui/base";
 import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { Keyboard } from "react-native";
+import { serverTimestamp, addDoc, collection } from "firebase/firestore";
+import { db, auth } from "../firebase";
 
 const ChatScreen = ({ navigation, route }) => {
   const [input, setInput] = useState("");
-
-  const sendMessage = () => {};
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -66,6 +68,23 @@ const ChatScreen = ({ navigation, route }) => {
     });
   }, [navigation]);
 
+  const sendMessage = () => {
+    Keyboard.dismiss();
+
+    const collectionId = "messages";
+    const document = "chats";
+    const documentId = route.params.id;
+    addDoc(collection(db, document, documentId, collectionId), {
+      timestamp: serverTimestamp(),
+      message: input,
+      displayName: auth.currentUser.displayName,
+      email: auth.currentUser.email,
+      photoURL: auth.currentUser.photoURL,
+    });
+
+    setInput("");
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -78,20 +97,24 @@ const ChatScreen = ({ navigation, route }) => {
         style={styles.container}
         keyboardVerticalOffset={90}
       >
-        <>
-          <ScrollView>{/* CHAT ELEMENTS HERE */}</ScrollView>
-          <View style={styles.footer}>
-            <TextInput
-              placeholder="Signal Message"
-              style={styles.textInput}
-              value={input}
-              onChangeText={(text) => setInput(text)}
-            />
-            <TouchableOpacity onPress={sendMessage} activeOpacity={0.5}>
-              <Ionicons name="send" size={24} color="#2B68E6" />
-            </TouchableOpacity>
-          </View>
-        </>
+        {/* HIDE KEYBOARD ON PRESS OUTSIDE KEYBOARD AREA */}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <>
+            <ScrollView>{/* CHAT ELEMENTS HERE */}</ScrollView>
+            <View style={styles.footer}>
+              <TextInput
+                placeholder="Signal Message"
+                style={styles.textInput}
+                value={input}
+                onChangeText={(text) => setInput(text)}
+                onSubmitEditing={sendMessage}
+              />
+              <TouchableOpacity onPress={sendMessage} activeOpacity={0.5}>
+                <Ionicons name="send" size={24} color="#2B68E6" />
+              </TouchableOpacity>
+            </View>
+          </>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
