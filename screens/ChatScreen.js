@@ -20,6 +20,10 @@ import {
   collection,
   getDocs,
   orderBy,
+  getDoc,
+  onSnapshot,
+  query,
+  doc,
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
 
@@ -41,9 +45,7 @@ const ChatScreen = ({ navigation, route }) => {
           <Avatar
             rounded
             source={{
-              uri:
-                messages[0]?.data.photoURL ||
-                "https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png",
+              uri: messages[messages.length - 1]?.data.photoURL,
             }}
           />
           <Text
@@ -79,11 +81,7 @@ const ChatScreen = ({ navigation, route }) => {
 
   const sendMessage = () => {
     Keyboard.dismiss();
-
-    const collectionId = "messages";
-    const document = "chats";
-    const documentId = route.params.id;
-    addDoc(collection(db, document, documentId, collectionId), {
+    addDoc(collection(db, "chats", route.params.id, "messages"), {
       timestamp: serverTimestamp(),
       message: input,
       displayName: auth.currentUser.displayName,
@@ -97,13 +95,11 @@ const ChatScreen = ({ navigation, route }) => {
   useLayoutEffect(() => {
     const q = query(
       collection(db, "chats", route.params.id, "messages"),
-      orderBy("timestamp", "desc")
+      orderBy("timestamp", "asc")
     );
-    const querySnapshot = getDocs(q);
-    querySnapshot.forEach((doc) => {
-      // doc.data() is never undefined for query doc snapshots
+    return onSnapshot(q, (snapshot) => {
       setMessages(
-        data.docs.map((doc) => ({
+        snapshot.docs.map((doc) => ({
           id: doc.id,
           data: doc.data(),
         }))
@@ -129,7 +125,7 @@ const ChatScreen = ({ navigation, route }) => {
             <ScrollView contentContainerStyle={{ paddingTop: 15 }}>
               {messages.map(({ id, data }) =>
                 data.email === auth.currentUser.email ? (
-                  <View key={id} style={styles.reciever}>
+                  <View key={id} style={styles.receiver}>
                     <Avatar
                       position="absolute"
                       bottom={-15}
@@ -143,7 +139,7 @@ const ChatScreen = ({ navigation, route }) => {
                       rounded
                       size={30}
                       source={{
-                        uri: data.photoUrl,
+                        uri: data.photoURL,
                       }}
                     />
                     <Text style={styles.recieverText}>{data.message}</Text>
@@ -163,7 +159,7 @@ const ChatScreen = ({ navigation, route }) => {
                       rounded
                       size={30}
                       source={{
-                        uri: data.photoUrl,
+                        uri: data.photoURL,
                       }}
                     />
                     <Text style={styles.senderText}>{data.message}</Text>
@@ -214,7 +210,7 @@ const styles = StyleSheet.create({
     color: "grey",
     borderRadius: 30,
   },
-  reciever: {
+  receiver: {
     padding: 15,
     backgroundColor: "#ECECEC",
     alignSelf: "flex-end",

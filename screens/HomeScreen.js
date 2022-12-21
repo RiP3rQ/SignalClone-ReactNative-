@@ -12,7 +12,13 @@ import { Avatar } from "@rneui/base";
 import { auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
 import { AntDesign, SimpleLineIcons } from "@expo/vector-icons";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+} from "firebase/firestore";
 
 const HomeScreen = ({ navigation }) => {
   const [chats, setChats] = useState([]);
@@ -29,18 +35,15 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    const getData = async () => {
-      const data = await getDocs(collection(db, "chats"));
+    return onSnapshot(collection(db, "chats"), (snapshot) => {
       setChats(
-        data.docs.map((doc) => ({
+        snapshot.docs.map((doc) => ({
           id: doc.id,
           data: doc.data(),
         }))
       );
-    };
-
-    getData();
-  }, []);
+    });
+  }, [db]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
